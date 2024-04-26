@@ -7,8 +7,22 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Hackaton_003_LinkedList
 {
+    /* 
+     * custom LinkedList implementation for Hackaton 003
+     * custom implementation of a doubly linked list, designed specifically for Hackaton 003. 
+     * The implementation does not rely on indexes for node manipulation, enhancing flexibility and performance for specific use cases. 
+     * The Node and NodeManager classes provide basic functionalities such as inserting at the beginning, end, and a specified position, as well as deleting nodes. Each node maintains references to both its next and previous nodes, allowing for efficient bidirectional traversal and manipulation. The main program demonstrates various operations to showcase the functionality of the linked list.
+       
+       Key features included:
+     - Node creation with dynamic ID generation and data encapsulation.
+     - Insertion and deletion from both ends of the list and at specific positions.
+     - Comprehensive display and search functionalities for ease of debugging and testing.
+     - Custom `ToString` method implementations for better node visibility during outputs.
+    */
+
     public class Program
     {
+        
         static void Main(string[] args)
         {
             var ll = new NodeManager();
@@ -255,7 +269,7 @@ namespace Hackaton_003_LinkedList
                 newNode.LastNode = nodeInCollection;
                 nodeInCollection.NextNode = newNode;
             }
-            else if(nodeInCollection == tail)
+            else if (nodeInCollection == tail)
             {
                 newNode.NextNode = null;
                 newNode.LastNode = nodeInCollection;
