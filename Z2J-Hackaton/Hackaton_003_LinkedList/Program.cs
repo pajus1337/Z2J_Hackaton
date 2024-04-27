@@ -1,28 +1,44 @@
 ﻿using System;
 using System.Data.Common;
+using System.Diagnostics.Metrics;
 using System.Net.Http.Headers;
 using System.Net.NetworkInformation;
 using System.Reflection.Metadata;
+using System.Security;
+using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Hackaton_003_LinkedList
 {
-    /* 
-     * custom LinkedList implementation for Hackaton 003
-     * custom implementation of a doubly linked list, designed specifically for Hackaton 003. 
-     * The implementation does not rely on indexes for node manipulation, enhancing flexibility and performance for specific use cases. 
-     * The Node and NodeManager classes provide basic functionalities such as inserting at the beginning, end, and a specified position, as well as deleting nodes. Each node maintains references to both its next and previous nodes, allowing for efficient bidirectional traversal and manipulation. The main program demonstrates various operations to showcase the functionality of the linked list.
-       
-       Key features included:
-     - Node creation with dynamic ID generation and data encapsulation.
-     - Insertion and deletion from both ends of the list and at specific positions.
-     - Comprehensive display and search functionalities for ease of debugging and testing.
-     - Custom `ToString` method implementations for better node visibility during outputs.
-    */
+    /*
+     * Custom LinkedList Implementation for Hackaton 003
+     * This implementation of a doubly linked list is tailored specifically for Hackaton 003, 
+     * featuring enhancements that boost flexibility and performance for specialized use cases.
+     * The list is designed without reliance on index-based node manipulation, 
+     * supporting more dynamic data handling and modifications.
+     * 
+     * The Node and NodeManager classes form the core of this implementation, 
+     * facilitating essential operations such as insertions at the beginning, the end, 
+     * and at specified positions, as well as deletions of nodes. Each node maintains references
+     * to both its next and previous nodes, enabling efficient bidirectional traversal and manipulation.
+     * 
+     * Major features of this implementation include:
+     * - Node creation with auto-incremented ID for unique identification and encapsulated data handling.
+     * - Efficient insertion and deletion operations at both ends of the list, as well as precise insertions at specified positions, 
+         managed through a dynamic size tracking system to optimize performance.
+     * - An enhanced display function that provides immediate visibility into the current size of the list, aiding in debugging and real-time data management.
+     * - Advanced search functionalities that allow quick retrieval of nodes by their data or ID, leveraging the doubly linked structure for efficient scanning 
+         from both ends of the list.
+     * - Custom `ToString` method implementations in the Node class to improve the visibility and debugging output of node states, 
+         facilitating easier tracking of node relationships and data during operations.
+     *
+     * The main program section demonstrates various operations, showcasing the robust capabilities and versatility of the linked list in managing a dynamic set of data entries effectively.
+     */
+
 
     public class Program
     {
-        
+
         static void Main(string[] args)
         {
             var ll = new NodeManager();
@@ -30,12 +46,17 @@ namespace Hackaton_003_LinkedList
             ll.Insert_At_End("20");
             ll.Insert_At_Beginning("15");
             ll.Insert_At_Beginning("5");
-            ll.Insert_At_Position("16", "15");
             ll.Display();
-            ll.Delete_From_Beginning();
+            ll.Insert_At_Position("16", "15");
+            ll.Insert_At_Beginning("5");
+            ll.Display();
+            ll.Delete_From_End();
             ll.Delete_Node("15");
             ll.Display();
             ll.Clear();
+            ll.Insert_At_Beginning("3");
+            ll.Delete_From_Beginning();
+            ll.Display();
         }
     }
 
@@ -64,20 +85,15 @@ namespace Hackaton_003_LinkedList
 
     public class NodeManager
     {
-        private List<Node> nodesCollecition { get; set; }
         private Node head;
         private Node tail;
-
-        public NodeManager()
-        {
-            nodesCollecition = new List<Node>();
-        }
+        private int collectionSize = 0;
 
         public void Insert_At_Beginning(string data)
         {
             Node nodeNewObj = new Node(data);
 
-            if (nodesCollecition.Count == 0)
+            if (collectionSize == 0)
             {
                 nodeNewObj.LastNode = null;
                 head = nodeNewObj;
@@ -92,7 +108,7 @@ namespace Hackaton_003_LinkedList
                 head = nodeNewObj;
             }
 
-            nodesCollecition.Add(nodeNewObj);
+            ++collectionSize;
             Console.WriteLine($"Sucessfuly added new node at beginning the Node Collection\r\n{head.ToString()}");
         }
 
@@ -115,7 +131,7 @@ namespace Hackaton_003_LinkedList
                 tail = nodeNewObj;
             }
 
-            nodesCollecition.Add(nodeNewObj);
+            ++collectionSize;
             Console.WriteLine($"Sucessfuly added new node at end of the Node Collection\r\n{tail.ToString()}");
         }
 
@@ -127,6 +143,7 @@ namespace Hackaton_003_LinkedList
             {
                 ConnectNewNodeInsert(nodeWithSearchedData, nodeNewObj);
                 Console.WriteLine($"New node inserted sucessfully\r\n{nodeNewObj.ToString()}");
+                collectionSize++;
             }
             else
             {
@@ -136,54 +153,61 @@ namespace Hackaton_003_LinkedList
 
         public void Delete_From_Beginning()
         {
-            if (nodesCollecition.Count == 0)
+            if (collectionSize == 0)
             {
                 Console.WriteLine("Failed, Collection is Empty");
                 return;
             }
-            else if (nodesCollecition.Count > 1)
+            else if (collectionSize > 1)
             {
+                Node NodeToRemove;
+                NodeToRemove = head;
                 var newHeadNode = head.NextNode;
                 newHeadNode.LastNode = null;
-                nodesCollecition.Remove(head);
-                Console.WriteLine($"Sucessfuly removed head node from collection\r\n{head.ToString()}");
+                head = null;
+                Console.WriteLine($"Sucessfuly removed head node from collection\r\n{NodeToRemove.ToString()}");
+                NodeToRemove = null;
                 head = newHeadNode;
                 Console.WriteLine($"New head node is now:\r\n{head.ToString()}");
+                --collectionSize;
                 return;
             }
             else
             {
-                nodesCollecition.Remove(head);
-                Console.WriteLine("Sucessfully removed node from Collection, Collection is now Empty.");
                 head = null;
                 tail = null;
+                --collectionSize;
+                Console.WriteLine("Sucessfully removed node from Collection, Collection is now Empty.");
                 return;
             }
         }
 
         public void Delete_From_End()
         {
-            if (nodesCollecition.Count == 0)
+            if (collectionSize == 0)
             {
                 Console.WriteLine("Failed, Collection is Empty");
                 return;
             }
-            else if (nodesCollecition.Count > 1)
+            else if (collectionSize > 1)
             {
                 var newTailNode = tail.LastNode;
-                nodesCollecition.Remove(tail);
-                Console.WriteLine($"Sucessfuly removed tail node from collection\r\n{tail.ToString()}");
+                var NodeToRemove = tail;
+                tail = null;
+                Console.WriteLine($"Sucessfuly removed tail node from collection\r\n{NodeToRemove.ToString()}");
+                NodeToRemove = null;
                 newTailNode.NextNode = null;
                 tail = newTailNode;
                 Console.WriteLine($"New tail node is now:\r\n{tail.ToString()}");
+                --collectionSize;
                 return;
             }
             else
             {
-                nodesCollecition.Remove(tail);
-                Console.WriteLine("Sucessfully removed node from Collection, Collection is now Empty.");
                 head = null;
                 tail = null;
+                Console.WriteLine("Sucessfully removed node from Collection, Collection is now Empty.");
+                --collectionSize;
                 return;
 
             }
@@ -191,69 +215,112 @@ namespace Hackaton_003_LinkedList
 
         public void Delete_Node(string containsData)
         {
-            foreach (var node in nodesCollecition)
+
+            if (tail.Data == containsData)
             {
-                if (node.Data == containsData)
-                {
-                    if (node == tail)
-                    {
-                        Delete_From_End();
-                        return;
-                    }
-                    else if (node == head)
-                    {
-                        Delete_From_Beginning();
-                        return;
-                    }
-                    else
-                    {
-                        ConnectTwoNodes(node.LastNode, node.NextNode);
-                        Console.WriteLine("Node Found, deleting.");
-                        nodesCollecition.Remove(node);
-                        Console.WriteLine($"Node {node.ToString()} Deleted");
-                        return;
-                    }
-                }
+                Delete_From_End();
+                return;
             }
 
-            Console.WriteLine("Node Not Found with this data");
+            else if (head.Data == containsData)
+            {
+                Delete_From_Beginning();
+                return;
+            }
+            else
+            {
+                Node currentNode = head.NextNode;
+                while (currentNode != tail)
+                {
+                    if (currentNode.Data == containsData)
+                    {
+                        Console.WriteLine("Node Found, deleting.");
+                        Node nodeToRemove = currentNode;
+                        ConnectTwoNodes(currentNode.LastNode, currentNode.NextNode);
+                        currentNode = null;
+                        Console.WriteLine($"Node {nodeToRemove.ToString()} Deleted");
+                        nodeToRemove = null;
+                        --collectionSize;
+                        return;
+                    }
+                    currentNode = currentNode.NextNode;
+                }
+                Console.WriteLine("Node Not Found with this data");
+                return;
+            }
         }
 
         public void Clear()
         {
-            nodesCollecition.Clear();
-            Console.WriteLine($"New Collection Size after Clean UP: {Size()}");
+            Node currentNode = tail;
+
+            while (currentNode != head)
+            {
+                Node nodeToRemove = currentNode;
+                currentNode = currentNode.LastNode;
+                nodeToRemove = null;
+                --collectionSize;
+            }
+            head = null;
+            tail = null;
+            --collectionSize;
+            Console.WriteLine($"New Collection Size after Clean UP: {collectionSize}");
         }
 
-        public string Display() => $"Node Collection size: {Size()}";
+        public void Display()
+        {
+            Console.WriteLine($"Node Collection size: {collectionSize}");
+        }
 
         public Node Search(string searchingData)
         {
-            foreach (var node in nodesCollecition)
+            Node currentNode = head;
+
+            if (tail.Data == searchingData)
             {
-                if (node.Data == searchingData)
-                {
-                    return node;
-                }
+                return tail;
             }
-            return null;
+
+            else
+            {
+                while (currentNode != null)
+                {
+                    if (currentNode.Data == searchingData)
+                    {
+                        return currentNode;
+                    }
+                    currentNode = currentNode.NextNode;
+                }
+                Console.WriteLine($"Node with ID {searchingData}, not Found in Collection.");
+                return null;
+            }
         }
 
         public Node Search(int searchNodeById)
         {
-            foreach (var node in nodesCollecition)
+            Node currentNode = head;
+
+            if (tail.Id == searchNodeById)
             {
-                if (node.Id == searchNodeById)
-                {
-                    return node;
-                }
+                return tail;
             }
 
-            Console.WriteLine($"Node with ID {searchNodeById}, not Found in Collection.");
-            return null;
+            else
+            {
+                while (currentNode != null)
+                {
+                    if (currentNode.Id == searchNodeById)
+                    {
+                        return currentNode;
+                    }
+                    currentNode = currentNode.NextNode;
+                }
+                Console.WriteLine($"Node with ID {searchNodeById}, not Found in Collection.");
+                return null;
+            }
         }
 
-        public int Size() => nodesCollecition.Count;
+        public int Size() => collectionSize;
 
         private void ConnectTwoNodes(Node lastNode, Node nextNode)
         {
