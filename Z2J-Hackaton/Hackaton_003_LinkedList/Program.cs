@@ -1,12 +1,4 @@
-﻿using System;
-using System.Data.Common;
-using System.Diagnostics.Metrics;
-using System.Net.Http.Headers;
-using System.Net.NetworkInformation;
-using System.Reflection.Metadata;
-using System.Security;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Collections;
 
 namespace Hackaton_003_LinkedList
 {
@@ -41,7 +33,7 @@ namespace Hackaton_003_LinkedList
 
         static void Main(string[] args)
         {
-            var ll = new NodeManager();
+            var ll = new NodeManager<string>();
             ll.Insert_At_Beginning("10");
             ll.Insert_At_End("20");
             ll.Insert_At_Beginning("15");
@@ -60,15 +52,15 @@ namespace Hackaton_003_LinkedList
         }
     }
 
-    public class Node
+    public class Node<T>
     {
         public static int NodeRef;
         public int Id { get; init; }
-        public string Data { get; set; }
-        public Node NextNode { get; set; }
-        public Node LastNode { get; set; }
+        public T Data { get; set; }
+        public Node<T> NextNode { get; set; }
+        public Node<T> LastNode { get; set; }
 
-        public Node(string nodeData)
+        public Node(T nodeData)
         {
             Id = ++NodeRef;
             Data = nodeData;
@@ -83,15 +75,15 @@ namespace Hackaton_003_LinkedList
         }
     }
 
-    public class NodeManager
+    public class NodeManager<T> : IEnumerable<Node<T>>
     {
-        private Node head;
-        private Node tail;
+        private Node<T> head;
+        private Node<T> tail;
         private int collectionSize = 0;
 
-        public void Insert_At_Beginning(string data)
+        public void Insert_At_Beginning(T data)
         {
-            Node nodeNewObj = new Node(data);
+            Node<T> nodeNewObj = new Node<T>(data);
 
             if (collectionSize == 0)
             {
@@ -112,9 +104,9 @@ namespace Hackaton_003_LinkedList
             Console.WriteLine($"Sucessfuly added new node at beginning the Node Collection\r\n{head.ToString()}");
         }
 
-        public void Insert_At_End(string data)
+        public void Insert_At_End(T data)
         {
-            Node nodeNewObj = new Node(data);
+            Node<T> nodeNewObj = new Node<T>(data);
 
             if (head == null && tail == null)
             {
@@ -135,10 +127,10 @@ namespace Hackaton_003_LinkedList
             Console.WriteLine($"Sucessfuly added new node at end of the Node Collection\r\n{tail.ToString()}");
         }
 
-        public void Insert_At_Position(string dataForNewNode, string placeItAfterNodeWithThisData)
+        public void Insert_At_Position(T dataForNewNode, T placeItAfterNodeWithThisData)
         {
-            Node nodeNewObj = new Node(dataForNewNode);
-            Node nodeWithSearchedData = Search(placeItAfterNodeWithThisData);
+            Node<T> nodeNewObj = new Node<T>(dataForNewNode);
+            Node<T> nodeWithSearchedData = Search(placeItAfterNodeWithThisData);
             if (nodeWithSearchedData != null)
             {
                 ConnectNewNodeInsert(nodeWithSearchedData, nodeNewObj);
@@ -160,7 +152,7 @@ namespace Hackaton_003_LinkedList
             }
             else if (collectionSize > 1)
             {
-                Node NodeToRemove;
+                Node<T> NodeToRemove;
                 NodeToRemove = head;
                 var newHeadNode = head.NextNode;
                 newHeadNode.LastNode = null;
@@ -213,29 +205,29 @@ namespace Hackaton_003_LinkedList
             }
         }
 
-        public void Delete_Node(string containsData)
+        public void Delete_Node(T containsData)
         {
 
-            if (tail.Data == containsData)
+            if (Equals(tail.Data, containsData))
             {
                 Delete_From_End();
                 return;
             }
 
-            else if (head.Data == containsData)
+            else if (Equals(head.Data,containsData))
             {
                 Delete_From_Beginning();
                 return;
             }
             else
             {
-                Node currentNode = head.NextNode;
+                Node<T> currentNode = head.NextNode;
                 while (currentNode != tail)
                 {
-                    if (currentNode.Data == containsData)
+                    if (Equals(currentNode.Data, containsData))
                     {
                         Console.WriteLine("Node Found, deleting.");
-                        Node nodeToRemove = currentNode;
+                        Node<T> nodeToRemove = currentNode;
                         ConnectTwoNodes(currentNode.LastNode, currentNode.NextNode);
                         currentNode = null;
                         Console.WriteLine($"Node {nodeToRemove.ToString()} Deleted");
@@ -252,11 +244,11 @@ namespace Hackaton_003_LinkedList
 
         public void Clear()
         {
-            Node currentNode = tail;
+            Node<T> currentNode = tail;
 
             while (currentNode != head)
             {
-                Node nodeToRemove = currentNode;
+                Node<T> nodeToRemove = currentNode;
                 currentNode = currentNode.LastNode;
                 nodeToRemove = null;
                 --collectionSize;
@@ -272,11 +264,11 @@ namespace Hackaton_003_LinkedList
             Console.WriteLine($"Node Collection size: {collectionSize}");
         }
 
-        public Node Search(string searchingData)
+        public Node<T> Search(T searchingData)
         {
-            Node currentNode = head;
+            Node<T> currentNode = head;
 
-            if (tail.Data == searchingData)
+            if (Equals(tail.Data,searchingData))
             {
                 return tail;
             }
@@ -285,7 +277,7 @@ namespace Hackaton_003_LinkedList
             {
                 while (currentNode != null)
                 {
-                    if (currentNode.Data == searchingData)
+                    if (Equals(currentNode.Data, searchingData))
                     {
                         return currentNode;
                     }
@@ -296,9 +288,9 @@ namespace Hackaton_003_LinkedList
             }
         }
 
-        public Node Search(int searchNodeById)
+        public Node<T> Search(int searchNodeById)
         {
-            Node currentNode = head;
+            Node<T> currentNode = head;
 
             if (tail.Id == searchNodeById)
             {
@@ -322,13 +314,13 @@ namespace Hackaton_003_LinkedList
 
         public int Size() => collectionSize;
 
-        private void ConnectTwoNodes(Node lastNode, Node nextNode)
+        private void ConnectTwoNodes(Node<T> lastNode, Node<T> nextNode)
         {
             lastNode.NextNode = nextNode;
             nextNode.LastNode = lastNode;
         }
 
-        private void ConnectNewNodeInsert(Node nodeInCollection, Node newNode)
+        private void ConnectNewNodeInsert(Node<T> nodeInCollection, Node<T> newNode)
         {
             if (nodeInCollection.NextNode != null)
             {
@@ -343,5 +335,17 @@ namespace Hackaton_003_LinkedList
                 tail = newNode;
             }
         }
+
+        public IEnumerator<Node<T>> GetEnumerator()
+        {
+            Node<T> currentNode = head;
+            while (currentNode != null)
+            {
+                yield return currentNode;
+                currentNode = currentNode.NextNode;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }
